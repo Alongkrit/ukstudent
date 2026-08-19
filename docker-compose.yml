@@ -1,0 +1,38 @@
+name: uk-student-support
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ukss-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ukss
+      POSTGRES_PASSWORD: ukss_dev_password
+      POSTGRES_DB: ukss_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - ukss_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ukss -d ukss_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: ukss-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ukss_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  ukss_postgres_data:
+  ukss_redis_data:

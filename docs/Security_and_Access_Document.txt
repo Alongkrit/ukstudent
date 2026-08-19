@@ -1,0 +1,203 @@
+
+UK STUDENT SUPPORT
+Security & Access Document
+Authentication, authorisation, data protection and compliance for UK Student Support
+Version 1.1  |  August 2026  |  Status: Draft for build  |  Covers: iOS, Android and Web
+Team size: 2 (Backend/Full-stack + Frontend/Mobile)
+
+1. Purpose & Scope
+This document defines how UK Student Support protects user accounts, personal data, academic documents and payment information, and how access is controlled across the Student app, Expert app, Admin console and backend API. It applies to all environments (local, staging, production) but security controls described here are mandatory in staging and production.
+Because the platform handles student personal data, uploaded coursework, and expert identity/qualification documents, UK GDPR and the Data Protection Act 2018 apply directly. Security decisions below are written with a 2-person team in mind: wherever possible we rely on a managed provider's built-in compliance (Stripe for payment data, a managed Postgres host for encryption/backups) rather than building custom security infrastructure.
+2. User Roles & Access Control
+2.1 Roles
+Role
+Description
+Primary Surface
+Student
+Registered university student who submits requests and pays for support
+Student mobile app
+Expert
+Vetted academic expert who accepts requests and provides guidance
+Expert mobile app
+Admin
+Internal team member (founders/support staff) managing the platform
+Admin web console
+Unauthenticated
+Anyone browsing public marketing pages, blog, or the pre-signup app screens
+Marketing site / app onboarding
+2.2 Role-Based Access Control (RBAC) Matrix
+Resource / Action
+Student
+Expert
+Admin
+Create a request
+Yes (own)
+No
+No
+View a request
+Own only
+Assigned only
+All
+Accept/decline a request
+No
+If matched pool
+No
+Send chat messages
+Own conversations
+Own conversations
+Read-only, for moderation
+Upload assignment/attachment
+Own requests
+Own conversations
+No
+View own payment history
+Yes
+Yes (as earnings)
+All
+Verify expert application
+No
+No
+Yes
+Suspend/ban a user
+No
+No
+Yes
+Publish blog content
+No
+No
+Yes
+Issue refund
+Request only
+No
+Yes
+View platform-wide analytics
+No
+No
+Yes
+Access control is enforced server-side on every request (never trust client-side role checks alone). NestJS route guards read the role and, where relevant, ownership (e.g. request.student_id === currentUser.id) from the authenticated JWT before executing any handler.
+3. Authentication
+3.1 Sign-up & Login
+Email + password for Students and Experts; passwords hashed with bcrypt (cost factor 12) — plaintext passwords are never logged or stored.
+Optional “Sign in with Apple/Google” for the Student app to reduce signup friction (recommended for v1.1, not required for MVP).
+Email verification is required before a student can submit a paid request, and before an expert application is reviewed — reduces fake accounts and spam.
+Password reset via time-limited (15 minute), single-use token sent by email; never reveal whether an email exists on the “forgot password” endpoint (respond identically either way).
+3.2 Session Management
+JWT access token (short-lived, 15 minutes) + refresh token (long-lived, 30 days, rotated on use) issued on both mobile and web, but stored differently per platform's safe-storage primitives (see 3.2.1 below).
+Refresh tokens are stored server-side (hashed) so they can be revoked individually on logout, password change, or suspected compromise — regardless of which platform issued them.
+Admin console uses a shorter refresh window (7 days) and requires re-authentication for sensitive actions (verifying experts, issuing refunds).
+3.2.1 Platform-Specific Token Storage (Mobile vs. Web)
+Platform
+Storage
+Rationale
+Mobile app
+Expo SecureStore (backed by iOS Keychain / Android Keystore)
+Hardware-backed secure storage; never AsyncStorage, which is unencrypted
+Web app
+Refresh token: httpOnly, Secure, SameSite=Lax cookie. Access token: in-memory only (JS variable, not localStorage/sessionStorage)
+httpOnly cookies are inaccessible to JavaScript, which mitigates XSS-based token theft — the main token-theft risk on the web that doesn't apply on mobile
+Admin console
+Same httpOnly cookie pattern as the web app, shorter expiry
+Consistent, safer pattern across all browser-based surfaces
+CSRF protection is required on the web app's cookie-based endpoints (SameSite=Lax cookies plus a double-submit CSRF token on state-changing requests) — this risk is specific to cookie-based web sessions and does not apply to the mobile app's header-based Bearer auth.
+CORS is configured to allow only the known web app origin(s) (production + staging domains); the mobile app calls the API directly outside the browser's CORS model.
+localStorage/sessionStorage are explicitly disallowed for storing tokens on web, since any XSS vulnerability would give an attacker direct read access to them.
+3.3 Expert Verification (identity & qualification checks)
+Expert applies via the Expert app, providing subjects, qualifications, and a short bio.
+Expert uploads proof of identity (passport/driving licence) and proof of qualification (degree certificate/transcript) to a private S3 bucket via signed upload URL.
+Application enters expert_documents with status=pending; expert cannot receive requests until an Admin manually reviews and sets verification_status=approved.
+Rejected applicants are notified with a reason; approved experts are onboarded to Stripe Connect for payouts, which also runs Stripe's own identity checks before funds can be paid out.
+This manual review step is intentionally kept human-in-the-loop for MVP — with a 2-person team and modest expert volume, an admin reviewing documents in the console is safer and cheaper than building automated identity verification.
+4. Data Protection & UK GDPR
+4.1 Data Classification
+Category
+Examples
+Handling
+Highly sensitive
+Passwords, ID documents, payment card data
+Passwords: hashed only. ID docs: private S3 bucket, admin-only signed access. Card data: never touches our servers — handled entirely by Stripe.js/Stripe Elements
+Personal data
+Name, email, phone, university, course
+Encrypted at rest (managed Postgres default), TLS in transit, access limited to the owning user + Admin
+Academic content
+Assignment briefs, chat messages, attachments
+Treated as confidential; private S3 storage; retained only as long as needed (see 4.3)
+Operational
+Request status, ratings, blog content
+Standard access controls; ratings/blog are semi-public by design
+4.2 Encryption
+All client-server traffic over HTTPS/WSS only — HTTP is redirected/rejected at the load balancer.
+Database encryption at rest via the managed Postgres provider's default (AES-256).
+S3 buckets encrypted at rest (SSE-S3 or SSE-KMS) with public access blocked; all object access via short-lived signed URLs, never public buckets.
+Secrets (API keys, DB credentials, JWT signing keys) stored in the hosting platform's environment/secret manager — never committed to git.
+4.3 Data Retention & Deletion
+Active account data retained for the lifetime of the account.
+On account deletion request, personal data is anonymised/erased within 30 days except where retention is legally required (e.g. payment records for tax purposes, typically 6 years per UK HMRC rules) — those records are retained but de-linked from the user's identifiable profile where possible.
+Chat attachments and assignment files are retained for 12 months after request completion (to support dispute resolution) then automatically purged by a scheduled job.
+Expert ID/qualification documents are retained only while the expert account is active plus the legal minimum required for records, then deleted.
+4.4 Data Subject Rights
+Right to access: users can request an export of their data (Admin manually fulfils for MVP; automate via a self-service “Download my data” button post-MVP).
+Right to erasure: account deletion flow in-app, processed per 4.3.
+Right to rectification: users can edit their own profile fields directly in-app.
+A published Privacy Policy and Terms of Service (linked from app onboarding and the marketing site) must document what is collected, why, retention periods, and how to exercise these rights.
+4.5 Third-Party Processors
+Processor
+Data Shared
+Purpose
+Stripe
+Name, email, payment details
+Payment processing & expert payouts (Stripe is PCI-DSS Level 1 certified)
+OneSignal
+Device push token, first name
+Push notifications
+Postmark/SendGrid
+Email address, name
+Transactional email
+Sentry
+Error stack traces (PII scrubbed where possible)
+Crash/error monitoring
+Cloud hosting (AWS/Render/Railway)
+All application data
+Hosting infrastructure
+A Data Processing Agreement (DPA) should be in place with each processor above before production launch — most (Stripe, OneSignal, Sentry, AWS) offer a standard DPA that simply needs to be accepted.
+5. Application & API Security
+Input validation on every endpoint via DTO schemas (class-validator in NestJS) — reject malformed/oversized payloads before they reach business logic.
+Rate limiting on auth endpoints (login, password reset, register) to mitigate brute-force and credential-stuffing — e.g. 5 attempts per IP per 10 minutes via Redis-backed throttling.
+File upload restrictions: allow-listed MIME types (PDF, DOCX, images, common code file types), max file size (e.g. 25MB), and files are scanned for malware before being made available for download (e.g. via a managed AV scanning service or S3 Lambda trigger).
+Parameterised queries only (enforced by using Prisma) — no raw string-concatenated SQL, eliminating SQL injection risk.
+Standard HTTP security headers (Helmet middleware): HSTS, X-Content-Type-Options, X-Frame-Options, CSP for the Admin web console.
+CORS restricted to known origins (mobile app via API only, Admin console domain) — no wildcard origins in production.
+Stripe webhook signature verification on every incoming webhook event to prevent spoofed payment confirmations.
+Dependency vulnerability scanning via GitHub Dependabot alerts, reviewed at least monthly given the small team's bandwidth.
+6. Trust, Safety & Academic Integrity
+Because the platform sits in the academic support space, it must be positioned and operated as guidance/tutoring — not as a ghost-writing or contract-cheating service. This has security and moderation implications, not just a legal/marketing one.
+Terms of Service explicitly prohibit experts completing and submitting work on a student's behalf for assessment; the platform's stated purpose is explanation, feedback and guidance.
+Admins can view (read-only) request and chat metadata to investigate reported misuse, with access logged (see 6.2 Audit Logging).
+A simple in-app “Report” action on any request/conversation flags it for Admin review; repeated or severe violations lead to account suspension.
+Expert vetting (Section 3.3) is itself a trust-and-safety control — only verified, qualified experts can accept requests.
+6.1 Content Moderation Workflow
+User submits a report (reason + optional note) from the chat/request screen.
+A moderation_reports record is created and surfaced in the Admin console queue.
+Admin reviews conversation history (read-only) and either dismisses, warns the user, or suspends the account.
+All moderation actions are logged with admin id, timestamp and reason for accountability.
+6.2 Audit Logging
+Every Admin action that changes state (verify/reject expert, suspend user, issue refund, publish/unpublish content) is written to an audit_logs table: actor_id, action, target_id, reason, timestamp.
+Audit logs are append-only from the application's perspective (no UPDATE/DELETE exposed via API) and retained for at least 12 months.
+7. Incident Response
+Detect: Sentry alert, user report, or unusual activity noticed by the team.
+Contain: revoke affected credentials/tokens, disable the affected account(s) or endpoint if necessary.
+Assess: determine scope — which users/data were affected.
+Notify: if personal data is confirmed compromised, the ICO must be notified within 72 hours where required under UK GDPR, and affected users notified without undue delay if there is high risk to their rights and freedoms.
+Remediate & review: patch the root cause, document the incident and update this Security & Access Document.
+Given the team size, both founders should know this runbook and have access to revoke keys/tokens and rotate secrets without depending on a single person being available.
+8. Pre-Launch Security Checklist
+HTTPS enforced everywhere; HTTP disabled.
+CORS allow-list restricted to production/staging web app origins; CSRF protection verified on cookie-based web auth endpoints.
+All secrets in environment/secret manager, none in source control (verify with a git history scan, e.g. gitleaks).
+Stripe in live mode with webhook signing secret configured.
+S3 buckets private by default; bucket policy reviewed.
+Rate limiting active on auth and payment endpoints.
+Privacy Policy & Terms of Service published and linked from app onboarding.
+Account deletion and data export flows tested end-to-end.
+Automated database backups verified with a test restore.
+Admin console access restricted to team accounts only (no public sign-up path).
+Incident response contacts and access (who can rotate keys) documented and known to both team members.

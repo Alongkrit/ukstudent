@@ -1,0 +1,267 @@
+
+UK STUDENT SUPPORT
+Technical Architecture Document
+System design & technology stack for the UK Student Support mobile platform
+Version 1.0  |  August 2026  |  Status: Draft for build
+Team size: 2 (Backend/Full-stack + Frontend/Mobile)
+
+1. Overview & Purpose
+UK Student Support is a mobile-first platform that connects UK university students with vetted academic experts for on-demand help across assignments, homework, dissertations, exam preparation, proofreading and programming. Students submit a request describing their subject, deadline and supporting documents; the platform matches them with an available expert; the pair communicate through in-app chat; and the engagement is closed out with a rating and payment.
+This document defines the technical architecture that a two-person team (one backend/full-stack engineer, one frontend/mobile engineer) can realistically design, build and operate. Every choice below favours managed services and a single deployable backend over a distributed microservice estate, so that the two-person team spends its time on product features rather than infrastructure.
+1.1 Goals
+Ship a working MVP (Student app + Expert app + lightweight Admin console) within a small team's capacity.
+Keep operational overhead low: one primary backend service, one primary database, managed third-party services for chat/notifications/payments/storage.
+Design for UK data protection (UK GDPR) from day one, since the product processes student personal data and academic work.
+Keep the architecture modular internally (clear service boundaries in code) so it can be split into separate services later if the team grows.
+1.2 Non-Goals (for MVP)
+Native desktop apps — the web experience is a responsive browser app (not an installable desktop client).
+Video/voice calling between student and expert — text chat and file sharing only for MVP.
+Automated plagiarism/AI-content detection — handled as a manual moderation policy in v1 (see Security & Access Document).
+Multi-currency/international expansion — GBP only, UK-registered experts only.
+2. High-Level Architecture
+UK Student Support ships on three surfaces — a Student & Expert mobile app, a Student & Expert web app, and an internal Admin web console — all talking to a single backend API, which relies on a managed relational database and a small set of third-party managed services. Mobile and web are two presentation layers over the same product: the same student can start a request on the website and finish the conversation in the mobile app, because both read/write the same backend.
+2.1 System Components (textual diagram)
+[ Student/Expert Mobile App ]   [ Student/Expert Web App ]   [ Admin Web Console ]
+            \                          |                          /
+                                    HTTPS / WSS
+                                        |
+                     [ Backend API (Node.js / NestJS, REST + WebSocket) ]
+                     /            |              |              \
+     [ PostgreSQL ]  [ Redis (cache/queues) ]  [ S3-compatible storage ]  [ Third-party services ]
+                                                                  Stripe · Push (FCM/APNs + Web Push via OneSignal) · Postmark/SendGrid (email) · Sentry
+2.2 Component Responsibilities
+Component
+Responsibility
+Technology
+Student/Expert Mobile App
+Full student & expert functionality: requests, matching, chat, payments, earnings, ratings, blog
+React Native (Expo) + TypeScript, role-based navigation for Student vs Expert
+Student/Expert Web App
+Same functionality as the mobile app, browser-based, responsive desktop + mobile-web layout; primary entry point from marketing site “Get the App” / “Open in App” links can resolve here for users without the app installed
+Next.js (React) + TypeScript, shares design tokens and API client with the mobile app
+Admin Console
+Expert verification, user management, dispute/content moderation, blog CMS, payouts oversight
+React + TypeScript (Vite), internal-only web app
+Backend API
+Business logic, auth, matching, chat orchestration, payments, notifications
+Node.js + NestJS (TypeScript), REST for CRUD, WebSocket (Socket.IO) for chat/presence
+Primary Database
+System of record for users, requests, messages metadata, payments, reviews
+PostgreSQL 16 (managed, e.g. AWS RDS / Supabase / Neon)
+Cache & Queue
+Session/rate-limit cache, background jobs (matching timeout, notification dispatch)
+Redis (managed, e.g. Upstash / ElastiCache) + BullMQ
+File Storage
+Assignment briefs, chat attachments, expert ID/qualification documents
+S3-compatible object storage (AWS S3) with signed URLs
+Payments
+Student checkout, expert payouts, refunds
+Stripe (Payment Intents + Stripe Connect for expert payouts) — Stripe.js on web, Stripe React Native SDK on mobile
+Notifications
+Push notifications (mobile + web push), transactional email
+OneSignal (push + web push), Postmark or SendGrid (email)
+Monitoring
+Error tracking, uptime, logging
+Sentry + hosting provider's built-in logs/metrics
+2.3 One Backend, Three Frontends — and Why This Is Realistic for 2 People
+A single NestJS backend serves mobile, web and admin identically — the same REST endpoints and the same Socket.IO gateway are used by all three, so there is exactly one place matching/chat/payment logic lives, regardless of platform.
+React Native (Expo) covers iOS + Android from one codebase; Next.js covers the web app. Both are React + TypeScript, so the frontend engineer reuses business logic (API client, validation schemas, formatting helpers) as a shared package between the two, and only the UI layer (native components vs. HTML/CSS with Tailwind) differs.
+The web app is built responsive-first (mobile-web breakpoint down to ~360px, tablet, desktop) so it also serves as the mobile-browser fallback for anyone who lands on the site without the native app installed — this satisfies the marketing site's existing “Get the App” / “Open in App” links even before a user downloads anything.
+Stripe Connect removes the need to build a custom ledger/payout engine — Stripe handles KYC for experts, holds funds, and pays out on a schedule, with equivalent SDKs on both web and mobile.
+Managed Postgres + Redis removes database administration; both providers offer automated backups, so no DBA is required.
+Socket.IO works natively over both native WebSocket (mobile) and browser WebSocket (web) from the same NestJS gateway — no separate real-time implementation needed per platform.
+3. Data Model
+The core entities below map directly to Postgres tables. Foreign keys are indicated with →.
+3.1 Core Entities
+Table
+Key Fields
+Notes
+users
+id, role (student/expert/admin), email, password_hash, phone, status, created_at
+Single table, discriminated by role
+student_profiles
+user_id → users, university, course, year_of_study
+1:1 with users where role=student
+expert_profiles
+user_id → users, subjects[], qualifications, verification_status, bio, rating_avg, stripe_account_id
+1:1 with users where role=expert; verification_status: pending/approved/rejected
+expert_documents
+id, expert_id → users, doc_type, file_url, status
+ID and qualification uploads for vetting
+services
+id, name, description, icon
+Assignment Help, Homework Support, Dissertation Guidance, Exam Prep, Proofreading, Programming Help, etc.
+requests
+id, student_id → users, service_id → services, subject, description, deadline_at, status, matched_expert_id → users
+status: submitted/matching/matched/in_progress/completed/cancelled
+request_attachments
+id, request_id → requests, file_url, file_name, uploaded_by
+Assignment briefs and supporting files
+conversations
+id, request_id → requests, student_id, expert_id, status
+One conversation per matched request
+messages
+id, conversation_id → conversations, sender_id, body, attachment_url, created_at, read_at
+Chat messages; body nullable if attachment-only
+payments
+id, request_id → requests, student_id, amount, currency, stripe_payment_intent_id, status
+status: pending/paid/refunded/failed
+payouts
+id, expert_id, amount, stripe_transfer_id, status, period_start, period_end
+Weekly payout batches via Stripe Connect
+reviews
+id, request_id → requests, student_id, expert_id, rating (1-5), comment
+Shown as aggregate rating on expert_profiles
+notifications
+id, user_id, type, payload, read_at, created_at
+In-app notification feed, mirrors push sends
+blog_posts
+id, title, slug, category, body, read_time, published_at
+Managed via Admin CMS
+3.2 Request Lifecycle (state machine)
+submitted — student has filled the request form and attached files.
+matching — backend is searching for/notifying eligible experts (subject match + availability).
+matched — an expert accepted; conversation is created and both parties notified.
+in_progress — chat is active until the student marks the request resolved or the deadline passes.
+completed — student confirms completion; triggers review prompt and finalises payment capture/expert payout accrual.
+cancelled — student or system cancels (e.g., no expert found within matching window); refund path if pre-paid.
+4. API Design
+REST for all standard CRUD and workflow actions; a single WebSocket namespace for chat and live presence/typing indicators. All endpoints are versioned under /api/v1.
+4.1 Endpoint Groups
+Group
+Example Endpoints
+Auth Required
+Auth
+POST /auth/register, POST /auth/login, POST /auth/refresh, POST /auth/verify-email, POST /auth/forgot-password
+Public (except refresh)
+Users
+GET /me, PATCH /me, POST /me/avatar
+Bearer token
+Experts
+POST /experts/apply, POST /experts/documents, GET /experts/:id, PATCH /experts/availability
+Bearer token (role=expert) / public for GET
+Services
+GET /services
+Public
+Requests
+POST /requests, GET /requests, GET /requests/:id, PATCH /requests/:id/cancel, POST /requests/:id/complete
+Bearer token
+Matching
+POST /requests/:id/accept (expert), POST /requests/:id/decline (expert)
+Bearer token (role=expert)
+Chat (REST)
+GET /conversations/:id/messages (paginated history)
+Bearer token, participant only
+Chat (WebSocket)
+ws: message:send, message:receive, typing, presence:update
+Token passed on socket handshake
+Payments
+POST /payments/create-intent, POST /payments/webhook (Stripe)
+Bearer token / Stripe signature
+Reviews
+POST /requests/:id/review, GET /experts/:id/reviews
+Bearer token / public GET
+Admin
+GET /admin/experts/pending, PATCH /admin/experts/:id/verify, GET /admin/requests, POST /admin/blog
+Bearer token (role=admin)
+Notifications
+GET /notifications, PATCH /notifications/:id/read
+Bearer token
+4.2 Conventions
+JSON request/response bodies; snake_case for DB columns, camelCase in API payloads (mapped at the service layer).
+Pagination via ?page= & ?limit=, capped at 50 items per page.
+Standard error envelope: { statusCode, error, message, requestId }.
+Idempotency keys required on POST /payments/create-intent to avoid duplicate charges on client retry.
+4.3 Cross-Platform Auth: Mobile vs. Web
+The same auth endpoints (Section 4.1) serve both platforms, but tokens are stored differently because a browser and a native app have different safe-storage primitives:
+Mobile app: JWT access + refresh tokens stored in Expo SecureStore, sent as a Bearer header on every request (as described in the Security & Access Document).
+Web app: refresh token stored as an httpOnly, Secure, SameSite=Lax cookie (not accessible to JavaScript, mitigating XSS token theft); short-lived access token kept in memory only and attached as a Bearer header. This is the standard safer pattern for browser clients.
+CSRF protection is required on the web app's cookie-based refresh endpoint (double-submit token or SameSite cookie policy) since mobile's header-based auth is not vulnerable to CSRF but the web cookie flow is.
+CORS on the backend allow-lists the web app's origin(s) explicitly (production domain + staging domain); the mobile app calls the API directly and is not subject to CORS.
+5. Matching & Real-Time Chat
+5.1 Matching Algorithm (MVP — rules-based, not ML)
+On request submission, backend queries expert_profiles for verified experts whose subjects[] intersects the request's subject and whose availability flag is on.
+Push notification + in-app alert sent to the top N (e.g. 5) matching experts simultaneously (“broadcast” model).
+First expert to accept via POST /requests/:id/accept wins the request; a DB row-level lock/transaction prevents double-acceptance.
+If no expert accepts within a configurable matching window (e.g. 15 minutes), the pool is widened (drop subject specificity to “general”) and the student is shown a status update; after a second window, the student is offered manual cancellation/refund.
+5.2 Chat Delivery
+Socket.IO server co-located in the NestJS process for MVP; Redis adapter used from day one so it is trivial to scale to multiple backend instances later.
+Messages are persisted to Postgres synchronously before being emitted, so REST history and WebSocket stream never disagree.
+Attachments are uploaded directly to S3 via a pre-signed URL obtained from the backend, then the resulting object URL is sent as a normal message.
+6. Environments & Deployment
+Environment
+Purpose
+Notes
+Local
+Day-to-day development
+Docker Compose: Postgres + Redis + backend; Expo Go for mobile
+Staging
+Pre-release QA, TestFlight/Play internal testing
+Mirrors production config with test Stripe keys
+Production
+Live traffic
+Autoscaling backend (2 instances minimum for uptime), managed Postgres with daily automated backups
+6.1 CI/CD
+GitHub Actions: lint + type-check + test on every PR; deploy to staging on merge to main; manual promotion (tag) to production.
+Backend deployed as a container to a managed platform (e.g. Render, Railway, or AWS ECS Fargate) — chosen to avoid the team managing raw servers/Kubernetes.
+Web app (Next.js) deployed to Vercel (or Netlify) with automatic preview deployments per PR — zero-config CI/CD for the frontend engineer, and free/cheap at MVP traffic levels.
+Mobile builds via EAS Build (Expo) producing signed iOS/Android binaries; EAS Update for OTA JS-only patches between store releases.
+Database migrations managed with Prisma Migrate (or TypeORM migrations), run automatically as a pre-deploy step in CI.
+6.2 Suggested Backend Folder Structure
+src/modules/auth, src/modules/users, src/modules/experts, src/modules/requests, src/modules/matching, src/modules/chat, src/modules/payments, src/modules/notifications, src/modules/admin, src/modules/blog
+Each module owns its controller, service, DTOs and Postgres repository — keeping clear internal boundaries even though it deploys as one service, so it can be split out later if needed.
+7. Scalability, Reliability & Observability
+MVP target: a few hundred concurrent users, low thousands of requests/day — comfortably handled by a single small backend instance plus a read replica added only if reporting queries start impacting latency.
+Redis-backed BullMQ queues handle anything that shouldn't block the request/response cycle: push notification dispatch, matching-window timeouts, payout batch jobs, review-reminder emails.
+Sentry captures backend exceptions and mobile crashes; a shared Slack/Discord alert channel is enough monitoring for a 2-person team at this stage.
+Daily automated Postgres backups with 7–30 day retention (provider default) and a documented manual restore runbook.
+Health check endpoint (GET /health) polled by the hosting platform for zero-downtime rolling deploys.
+8. Technology Stack Summary
+Layer
+Choice
+Rationale
+Mobile apps
+React Native + Expo + TypeScript
+One codebase for Student & Expert apps; fast iteration; OTA updates
+Web app
+Next.js + TypeScript + Tailwind
+Student & Expert web experience; responsive; shares API client/validation logic with mobile; SSR helps SEO for public pages (blog, service pages)
+Admin web
+React + Vite + TypeScript + Tailwind
+Small internal tool, quick to build
+Backend
+Node.js + NestJS + TypeScript
+Structured, testable, same language as frontend — one engineer can work across the stack
+Database
+PostgreSQL (managed)
+Relational integrity for users/requests/payments; strong tooling
+ORM
+Prisma
+Type-safe queries, easy migrations, pairs well with TypeScript
+Cache/Queue
+Redis + BullMQ
+Background jobs and Socket.IO scaling adapter
+Realtime
+Socket.IO
+Mature, well documented, works well with NestJS gateways
+File storage
+AWS S3 (or S3-compatible)
+Cheap, reliable, signed-URL access control
+Payments
+Stripe + Stripe Connect
+Handles PCI compliance and expert payouts out of the box
+Push notifications
+OneSignal
+Single API for iOS + Android, generous free tier
+Transactional email
+Postmark or SendGrid
+Verification emails, receipts, matching-timeout notices
+Error tracking
+Sentry
+One dashboard for backend + mobile crash reporting
+Hosting — backend
+Render / Railway (backend + DB) or AWS ECS Fargate
+Managed, minimal ops overhead for a 2-person team
+Hosting — web app
+Vercel (or Netlify)
+Purpose-built for Next.js; automatic PR previews, CDN, zero server management

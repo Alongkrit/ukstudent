@@ -1,0 +1,24 @@
+{
+  "name": "uk-student-support",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Scholza — monorepo (backend API, web app, shared package). Admin console to be added in a later step.",
+  "workspaces": [
+    "backend",
+    "web",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run start:dev --workspace=backend",
+    "dev:web": "npm run dev --workspace=web",
+    "build:backend": "npm run build --workspace=backend",
+    "build:web": "npm run build --workspace=web",
+    "build:shared": "npm run build --workspace=@uk-student-support/shared",
+    "lint": "npm run lint --workspace=backend && npm run lint --workspace=web",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

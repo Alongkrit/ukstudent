@@ -1,0 +1,314 @@
+
+UK STUDENT SUPPORT
+Frontend Specification Document
+Screens, navigation, design system and component structure across mobile app, web app and Admin console
+Version 1.1  |  August 2026  |  Status: Draft for build  |  Covers: iOS, Android and Web
+Team size: 2 (Backend/Full-stack + Frontend/Mobile)
+
+1. Overview
+There are four frontend surfaces: the Student & Expert mobile apps (React Native/Expo, one codebase with role-based navigation), the Student & Expert web app (Next.js, the same product experience in a browser), and the Admin Console (React web app, internal use only). This document specifies the screen inventory, navigation structure, design system and component/state approach needed to build all four.
+The mobile app and web app are not two different products — they are the same feature set (everything in Section 4.1/4.2) on two platforms. A student can sign up on the website, submit a request from a laptop, and continue the conversation in the mobile app; both read and write the same backend described in the Technical Architecture Document.
+1.1 Platforms & Tooling
+Surface
+Platform
+Framework
+Student app (mobile)
+iOS + Android
+React Native (Expo) + TypeScript, React Navigation
+Expert app (mobile)
+iOS + Android
+Same codebase as Student app, role-based navigation stack
+Student & Expert web app
+Browser — responsive (mobile web, tablet, desktop)
+Next.js + TypeScript, React Router/Next App Router, Tailwind CSS
+Admin Console
+Web (desktop-first)
+React + Vite + TypeScript + Tailwind CSS
+1.2 Mobile vs. Web: What's Shared, What's Platform-Specific
+Layer
+Shared across mobile & web?
+Notes
+API client & data-fetching hooks
+Yes
+React Query hooks, request/response types generated once, imported by both apps as a shared package
+Validation schemas
+Yes
+Zod schemas for forms (new request, expert application, etc.) shared between React Hook Form (mobile) and web forms
+Design tokens (colour, type, spacing)
+Yes
+Defined once (Section 2), consumed as Tailwind config on web and a theme object on mobile
+UI components
+No — platform-specific implementations
+Native components (React Native) vs. HTML/CSS components (Next.js); same visual spec, different code
+Navigation structure
+Conceptually shared, technically different
+Bottom tabs on mobile map to a top nav / sidebar on web (Section 3.4)
+Chat (Socket.IO client)
+Yes
+Same events/protocol; browser WebSocket vs. React Native WebSocket under the hood
+Payments UI
+No — platform SDKs differ
+Stripe React Native SDK (mobile) vs. Stripe.js/Elements (web); same backend Payment Intent flow
+2. Design System
+2.1 Brand & Visual Direction
+The existing marketing site uses a trustworthy, academic tone (navy/blue primary with warm accent, clean sans-serif type, generous whitespace, rounded cards). Carry this into the app for continuity between marketing and product.
+2.2 Colour Palette
+Token
+Hex
+Usage
+primary/navy
+#1F3864
+Primary buttons, headers, active nav state
+primary/blue
+#2E5C8A
+Links, secondary actions, icons
+accent/gold
+#E8A33D
+Ratings, highlights, CTA accents
+success
+#2F9E44
+Completed status, positive confirmations
+warning
+#E8590C
+Deadline approaching, pending states
+error
+#D32F2F
+Validation errors, destructive actions
+neutral/900
+#1A1A1A
+Primary text
+neutral/600
+#595959
+Secondary text
+neutral/100
+#EDF2F7
+Backgrounds, card fills, dividers
+2.3 Typography
+Font family: Inter (or system default fallback) for both mobile and web — clean, highly legible, free.
+Scale: H1 28/34, H2 22/28, H3 18/24, Body 16/24, Caption 13/18, Button label 16/20 (size/line-height in px).
+Weights: Bold (700) for headings and emphasis, Regular (400) for body, Medium (500) for buttons/labels.
+2.4 Spacing & Layout
+8px base spacing unit (4/8/16/24/32/48) applied consistently across padding, margins and gaps.
+Cards use 12px corner radius, subtle shadow, 16px internal padding — matching the rounded, friendly feel of the marketing site's chat bubbles and service cards.
+Minimum touch target 44x44pt on all interactive elements (accessibility requirement, see Section 6).
+2.5 Core Component Library
+Button (primary/secondary/text, with loading & disabled states)
+Input / TextArea (with label, helper text, error state)
+Select / Dropdown, DatePicker (for deadlines)
+Card (service card, request card, expert card)
+Avatar (with online/offline presence dot for experts)
+Badge/Tag (status: submitted, matching, matched, in progress, completed, cancelled)
+Chat bubble (sent/received, attachment variant, timestamp)
+Rating stars (display + interactive input)
+Toast/Snackbar for confirmations and errors
+Empty state illustration + message (no requests yet, no messages yet, etc.)
+Modal/BottomSheet (confirmations, filters, file preview)
+3. Information Architecture & Navigation
+3.1 Student App Navigation
+Bottom tab navigator with 5 tabs, each a stack navigator:
+Home — dashboard, active request status, quick-start service picker
+Requests — list of past & active requests
+Chat — list of conversations (badge for unread)
+Blog — study tips articles
+Profile — account, payment methods, settings, support
+3.2 Expert App Navigation
+Bottom tab navigator with 4 tabs (role-differentiated build of the same app shell):
+Dashboard — availability toggle, incoming request alerts, today's stats
+Requests — active/accepted requests
+Chat — conversations with students
+Profile — earnings, payout history, subjects/qualifications, settings
+3.3 Student & Expert Web App Navigation
+The web app mirrors the mobile tab structure but adapts it to browser conventions:
+Desktop / tablet (≥ 768px): persistent left sidebar with the same sections as the mobile tabs (Home, Requests, Chat, Blog, Profile for students; Dashboard, Requests, Chat, Profile for experts), plus a top bar with notifications and account menu.
+Mobile web (< 768px): bottom tab bar identical in structure to the native app, so the experience feels familiar to anyone switching between web and app.
+Public, unauthenticated routes exist for marketing/SEO purposes and link into the authenticated app: a public Service catalogue, public Blog (list + detail), and Sign up / Log in — these correspond to the existing marketing site's Home, Services, Blog and Get the App navigation, now served as real pages rather than static marketing copy.
+3.4 Admin Console Navigation
+Left sidebar layout (standard admin pattern):
+Overview — key metrics (active requests, pending expert applications, GMV)
+Users — student & expert directories, suspend/ban actions
+Expert Applications — verification queue
+Requests — monitor/search all requests, dispute intervention
+Payments — transactions, refunds, expert payout batches
+Moderation — reported conversations queue
+Blog CMS — create/edit/publish articles
+Settings — service categories, admin team accounts
+4. Screen Inventory
+4.1 Student App
+Screen
+Purpose
+Key Elements
+Splash / Onboarding
+First-run intro to the app's value prop
+3-slide carousel, Get Started CTA
+Sign Up
+Create account
+Name, university email, password, university/course selectors, ToS checkbox
+Log In
+Return access
+Email/password, forgot password link, biometric login toggle
+Email Verification
+Confirm student email
+Code input / “check your inbox” state
+Home / Dashboard
+Entry point after login
+Greeting, active request status card, service grid (Assignment Help, Homework, Dissertation, Exam Prep, Proofreading, Programming), CTA to start a request
+Service Selection
+Choose a service category
+Grid/list of services with icon + short description
+New Request — Details
+Describe the task
+Subject dropdown, title, description text area, deadline date/time picker
+New Request — Attachments
+Upload brief/supporting docs
+File picker (camera/photo library/document), attachment list with remove
+New Request — Review & Submit
+Confirm before submitting
+Summary card, price estimate (if applicable), Submit button
+Matching Status
+Waiting for an expert
+Animated status (“Finding your expert…”), elapsed time, cancel option
+Request Detail
+View a specific request
+Status timeline, expert card (once matched), Open Chat CTA, attachments list
+Requests List
+All past/active requests
+Filter by status, search, tap-through to detail
+Chat List
+All conversations
+Avatar, last message preview, unread badge, timestamp
+Chat Thread
+Talk with matched expert
+Message bubbles, attachment support, typing indicator, mark-resolved action
+Rate & Review
+Post-completion feedback
+5-star input, optional comment, submit
+Payment / Checkout
+Pay for a request
+Stripe payment sheet, saved cards, receipt confirmation
+Blog List
+Study articles
+Category filter, article cards with read-time
+Blog Detail
+Read an article
+Title, category tag, body content, related articles
+Profile
+Account settings
+Avatar, personal info edit, university details
+Payment Methods
+Manage cards
+Saved cards list, add/remove card
+Notifications
+In-app notification feed
+List grouped by date, tap-through to relevant screen
+Help / Support
+FAQs & contact
+Searchable FAQ list, contact support CTA
+Settings
+App preferences
+Push notification toggles, dark mode (if supported), log out, delete account
+4.2 Expert App
+Screen
+Purpose
+Key Elements
+Expert Apply
+Application form
+Subjects multi-select, qualifications text, bio, ID + qualification document upload
+Application Status
+Pending/approved/rejected state
+Status banner, resubmission option if rejected
+Dashboard
+Home base for active experts
+Availability toggle (online/offline), incoming request alert modal, today's earnings summary
+Incoming Request Alert
+New matching request
+Subject, deadline, brief preview, Accept / Decline buttons, countdown
+Active Requests
+Requests currently being worked
+Card list with deadline, Open Chat CTA
+Chat Thread
+Same component as Student app chat, expert-facing controls
+Message bubbles, attachments, mark-complete-my-side action
+Earnings
+Payout tracking
+This week's earnings, payout history table, next payout date
+Expert Profile
+Manage public profile
+Bio, subjects, qualifications, avatar
+Reviews
+See received ratings
+Aggregate rating, list of comments
+Settings
+App preferences
+Notification toggles, log out, deactivate account
+4.3 Student & Expert Web App
+The web app implements the same two screen sets as Sections 4.1 and 4.2 (Student and Expert), responsively laid out per Section 1.2/3.3, plus the public marketing-facing pages below that don't exist on mobile (an app store listing serves that role there):
+Screen
+Purpose
+Key Elements
+Public Home
+Marketing landing page, replaces/extends the current static site
+Hero messaging, How It Works steps, service highlights, testimonials, Get the App / Sign Up CTAs
+Public Service Catalogue
+Browsable, SEO-indexable list of all services
+Same service grid as the in-app Service Selection screen, but accessible without login
+Public Blog List & Detail
+Study-tips content for SEO and top-of-funnel traffic
+Same content as the in-app Blog screens, server-rendered for search indexing
+Sign Up / Log In (web)
+Web equivalent of the mobile auth screens
+Same fields as AUTH screens; also offers “Continue in the app” handoff
+All authenticated Student/Expert screens
+Full functional parity with mobile (Sections 4.1 / 4.2)
+Responsive layout of the same screens: dashboard, requests, chat, payments, profile, etc.
+4.4 Admin Console
+Screen
+Purpose
+Key Elements
+Login
+Admin authentication
+Email/password, no public sign-up
+Overview Dashboard
+Key metrics at a glance
+Active requests, pending applications count, GMV chart, new users chart
+Expert Applications Queue
+Review pending experts
+Table with filters, click-through to application detail with document viewer, Approve/Reject actions
+Users Directory
+Manage students & experts
+Searchable/filterable table, suspend/ban action, user detail drawer
+Requests Monitor
+Oversee all requests
+Filterable table by status/date, detail view with chat transcript (read-only)
+Moderation Queue
+Reported conversations
+List of reports with reason, linked conversation viewer, resolve/warn/suspend actions
+Payments
+Transactions & payouts
+Payments table, refund action, expert payout batch view
+Blog CMS
+Manage blog content
+Article list, rich-text editor, category tagging, publish/unpublish toggle
+Service Categories
+Manage the services list
+CRUD table for services shown in the app
+Admin Team
+Manage admin accounts
+Invite/remove admin users
+5. State Management & Data Fetching
+Server state (requests, chats, profiles): React Query (TanStack Query) for caching, background refetch, optimistic updates on actions like sending a message or accepting a request.
+Real-time chat state: Socket.IO client, messages appended to the React Query cache on receipt so the chat list and thread stay in sync.
+Local/UI state: React's built-in useState/useReducer — no need for a separate global store given the app's size.
+Auth state: a small context provider holding the current user + tokens, backed by Expo SecureStore for persistence.
+Forms: React Hook Form + Zod schema validation, shared validation schemas between the New Request flow and the Expert Apply flow where fields overlap.
+6. Accessibility & Responsiveness
+WCAG 2.1 AA colour contrast minimums for all text/background combinations in the palette.
+All interactive elements have accessible labels for screen readers (VoiceOver/TalkBack); icons paired with text or aria-label equivalents.
+Minimum 44x44pt touch targets; form fields support dynamic text sizing.
+Admin Console supports desktop breakpoints down to 1280px; mobile use of Admin is out of scope for MVP.
+Student/Expert mobile apps support standard phone screen sizes (iOS SE up to Pro Max, common Android sizes); tablet layout is a post-MVP enhancement.
+Student/Expert web app is responsive across three breakpoints: mobile web (< 768px, bottom tab layout matching the app), tablet (768–1024px), and desktop (> 1024px, sidebar layout) — built mobile-first and progressively enhanced.
+Public web pages (Home, Service Catalogue, Blog) are server-rendered (Next.js SSR/SSG) for SEO and fast first-paint, since they are the primary discovery surface for new users arriving from search or social.
+7. Error, Loading & Empty States
+Every data-fetching screen defines three states explicitly: loading (skeleton placeholders, not spinners, for list screens), error (retry action + friendly message), and empty (illustration + guidance, e.g. “No requests yet — start one now”).
+Network failures on submit actions (new request, send message, payment) show inline retry rather than losing the user's input.
+Offline banner shown app-wide when connectivity drops; chat messages queue locally and send on reconnect.

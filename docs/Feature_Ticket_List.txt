@@ -1,0 +1,548 @@
+
+UK STUDENT SUPPORT
+Feature Ticket List
+Epics and build-ready tickets for the UK Student Support MVP — mobile app + web app
+Version 1.1  |  August 2026  |  Status: Ready for sprint planning  |  Covers: iOS, Android and Web
+Team size: 2 (Backend/Full-stack + Frontend/Mobile)
+
+How to Read This Backlog
+Tickets are grouped into epics matching the architecture and frontend specs. Each ticket lists an owner suited to a 2-person team: BE (backend/full-stack engineer), FE (frontend engineer, covering both mobile and web), or Both. Estimates are rough sizes in engineer-days assuming the stack chosen in the Technical Architecture Document. Priority: P0 = required for MVP launch, P1 = important but can follow shortly after, P2 = nice-to-have / post-MVP.
+Platform coverage: the product ships on mobile (iOS + Android) and web from day one. Epics 1–6 below describe functionality that is built twice — once in the React Native app, once in the Next.js web app — against the same backend endpoints. Rather than duplicate every ticket per platform, each functional ticket's estimate assumes both a mobile and a web implementation; Epic 9 (Web App Platform) covers the web-specific setup and the public marketing/SEO pages that don't exist on mobile.
+Epic 1 — Authentication & Onboarding
+ID
+Title
+Description
+Owner
+Est.
+Pri.
+AUTH-1
+Student sign-up
+Email/password registration with university, course, year selectors; ToS/Privacy consent checkbox
+Both
+2
+P0
+AUTH-2
+Email verification flow
+Send verification email on sign-up; verify-code endpoint; block paid actions until verified
+BE
+1
+P0
+AUTH-3
+Login & JWT session
+Email/password login; access + refresh token issuance; secure token storage on device
+Both
+1.5
+P0
+AUTH-4
+Forgot / reset password
+Request reset email, time-limited single-use token, reset form
+Both
+1
+P0
+AUTH-5
+Token refresh & logout
+Silent refresh on expiry; logout revokes server-side refresh token
+BE
+1
+P0
+AUTH-6
+Onboarding carousel
+3-slide first-run intro screens before sign-up/login
+FE
+0.5
+P1
+AUTH-7
+Social login (Apple/Google)
+Sign in with Apple / Google for Student app
+Both
+2
+P2
+AUTH-8
+Biometric login toggle
+Face ID / fingerprint unlock using stored refresh token
+FE
+1
+P2
+Epic 2 — Expert Onboarding & Verification
+ID
+Title
+Description
+Owner
+Est.
+Pri.
+EXP-1
+Expert application form
+Subjects multi-select, qualifications, bio input screens
+FE
+1.5
+P0
+EXP-2
+Document upload (ID + qualifications)
+Signed S3 upload URLs, file type/size validation, upload UI
+Both
+2
+P0
+EXP-3
+Application status screen
+Pending / approved / rejected states with resubmission path
+FE
+1
+P0
+EXP-4
+Admin verification queue
+Admin console list of pending applications with document viewer
+Both
+2.5
+P0
+EXP-5
+Approve/reject application
+Admin action endpoint + email notification to applicant
+BE
+1
+P0
+EXP-6
+Stripe Connect onboarding
+Trigger Stripe Connect account creation & KYC on approval
+BE
+2
+P0
+EXP-7
+Expert availability toggle
+Online/offline flag used by the matching engine
+Both
+1
+P0
+EXP-8
+Expert profile management
+Edit bio, subjects, avatar
+Both
+1
+P1
+Epic 3 — Requests & Matching
+Core flow: student submits a request, backend finds and notifies experts, first acceptance wins.
+ID
+Title
+Description
+Owner
+Est.
+Pri.
+REQ-1
+Service catalogue endpoint & screen
+GET /services; Service Selection grid screen
+Both
+1
+P0
+REQ-2
+New request — details step
+Subject, title, description, deadline picker form
+FE
+1.5
+P0
+REQ-3
+New request — attachments step
+File picker (camera/library/document), attachment list
+Both
+2
+P0
+REQ-4
+New request — review & submit
+Summary screen, POST /requests, validation
+Both
+1
+P0
+REQ-5
+Matching engine — broadcast to experts
+Query eligible experts by subject+availability, push alert to top N
+BE
+3
+P0
+REQ-6
+Accept/decline request (expert)
+Row-lock transaction so only one expert wins; decline releases back to pool
+BE
+1.5
+P0
+REQ-7
+Matching status screen
+“Finding your expert…” live status with cancel option
+FE
+1
+P0
+REQ-8
+Matching timeout & widen/cancel logic
+Background job (BullMQ) to widen pool, then offer cancellation after windows elapse
+BE
+2
+P0
+REQ-9
+Request detail screen
+Status timeline, matched expert card, attachments, Open Chat CTA
+FE
+1.5
+P0
+REQ-10
+Requests list with filters
+Student & Expert versions, filter by status
+FE
+1
+P0
+REQ-11
+Mark request complete
+Student confirms completion; triggers review prompt & payment capture
+Both
+1.5
+P0
+REQ-12
+Cancel request & refund path
+Student/system cancellation, refund trigger if pre-paid
+Both
+1.5
+P0
+Epic 4 — Real-Time Chat
+ID
+Title
+Description
+Owner
+Est.
+Pri.
+CHAT-1
+Socket.IO gateway setup
+NestJS WebSocket gateway with auth handshake, Redis adapter
+BE
+2
+P0
+CHAT-2
+Conversation creation on match
+Auto-create conversation row when a request is matched
+BE
+0.5
+P0
+CHAT-3
+Chat thread UI
+Message bubbles, send box, attachment button, typing indicator
+FE
+2.5
+P0
+CHAT-4
+Message persistence & history
+POST message flow (persist then emit); GET paginated history endpoint
+BE
+1.5
+P0
+CHAT-5
+Attachment sharing in chat
+Signed upload URL flow reused from REQ-3; render file/image previews
+Both
+1.5
+P0
+CHAT-6
+Chat list screen
+Conversation list with unread badges, last message preview
+FE
+1
+P0
+CHAT-7
+Read receipts & unread counts
+read_at tracking, badge counts on tab bar
+Both
+1
+P1
+CHAT-8
+Offline message queueing
+Queue outgoing messages locally when offline, send on reconnect
+FE
+1.5
+P1
+Epic 5 — Payments & Payouts
+ID
+Title
+Description
+Owner
+Est.
+Pri.
+PAY-1
+Stripe payment intent creation
+POST /payments/create-intent with idempotency key
+BE
+1.5
+P0
+PAY-2
+Checkout screen (Stripe Elements/Payment Sheet)
+Card entry, saved cards, confirm payment
+FE
+2
+P0
+PAY-3
+Stripe webhook handling
+Signature-verified webhook for payment success/failure/refund events
+BE
+1.5
+P0
+PAY-4
+Payment history screen
+Student view of past charges/receipts
+FE
+1
+P0
+PAY-5
+Expert earnings screen
+Weekly earnings summary, payout history
+FE
+1
+P0
+PAY-6
+Payout batch job
+Scheduled job to transfer expert earnings via Stripe Connect
+BE
+2
+P0
+PAY-7
+Refund flow (Admin)
+Admin-triggered refund on a request, Stripe refund API integration
+BE
+1
+P0
+PAY-8
+Saved payment methods
+Add/remove card management screen
+Both
+1
+P1
+Epic 6 — Reviews, Notifications & Blog
+ID
+Title
+Description
+Owner
+Est.
+Pri.
+RATE-1
+Post-completion review prompt
+5-star + comment form shown after request completion
+FE
+1
+P0
+RATE-2
+Review submission & aggregate rating
+POST review, recompute expert rating_avg
+BE
+1
+P0
+RATE-3
+Expert reviews display
+List of reviews on expert profile
+FE
+0.5
+P1
+NOTIF-1
+Push notification integration
+OneSignal setup, device token registration
+Both
+1.5
+P0
+NOTIF-2
+Transactional email templates
+Verification, password reset, matching timeout, receipt emails
+BE
+1.5
+P0
+NOTIF-3
+In-app notification feed
+Notification list screen, mark-as-read
+Both
+1
+P1
+BLOG-1
+Blog list & detail screens
+Category filter, article cards, article detail view
+FE
+1.5
+P1
+BLOG-2
+Blog CMS (Admin)
+Rich-text editor, category tagging, publish/unpublish
+Both
+2
+P1
+Epic 7 — Admin Console
+ID
+Title
+Description
+Owner
+Est.
+Pri.
+ADM-1
+Admin login & role guard
+Separate login flow, no public sign-up, JWT role=admin enforcement
+BE
+1
+P0
+ADM-2
+Overview dashboard
+Key metrics: active requests, pending applications, GMV, new users
+Both
+2
+P1
+ADM-3
+Users directory
+Searchable/filterable table, suspend/ban action
+Both
+2
+P0
+ADM-4
+Requests monitor
+Filterable table, read-only chat transcript viewer for dispute review
+Both
+2
+P0
+ADM-5
+Moderation queue
+Reported conversations list, resolve/warn/suspend actions
+Both
+2
+P0
+ADM-6
+Service categories CRUD
+Admin-managed list of services shown in the apps
+Both
+1
+P1
+ADM-7
+Admin team management
+Invite/remove admin accounts
+Both
+1
+P2
+Epic 8 — Security, Compliance & Platform
+ID
+Title
+Description
+Owner
+Est.
+Pri.
+SEC-1
+RBAC guards across all endpoints
+Role + ownership checks enforced server-side per the RBAC matrix
+BE
+2
+P0
+SEC-2
+Rate limiting on auth & payment endpoints
+Redis-backed throttling
+BE
+1
+P0
+SEC-3
+File upload validation & AV scan
+MIME/size allow-list, malware scanning before files are servable
+BE
+1.5
+P0
+SEC-4
+Audit logging for admin actions
+audit_logs table + write on every state-changing admin action
+BE
+1
+P0
+SEC-5
+Account deletion & data export
+Self-service deletion flow; admin-fulfilled data export for MVP
+Both
+1.5
+P0
+SEC-6
+Report/flag content action
+In-app report button on requests/conversations feeding the moderation queue
+Both
+1
+P0
+OPS-1
+CI/CD pipelines
+GitHub Actions: lint/test/build, staging auto-deploy, production promotion
+BE
+1.5
+P0
+OPS-2
+Error monitoring setup
+Sentry integration for backend and both mobile apps
+BE
+0.5
+P0
+OPS-3
+Database backup & restore runbook
+Verify automated backups, document/test a manual restore
+BE
+0.5
+P0
+OPS-4
+Health check & uptime monitoring
+GET /health endpoint, hosting-platform monitoring hookup
+BE
+0.5
+P0
+Epic 9 — Web App Platform
+Web-specific setup and the public, unauthenticated pages that only exist on the web (mobile relies on app store listings instead). Authenticated web screens for Student/Expert (dashboard, requests, chat, payments, profile) are covered by the tickets in Epics 1–6, built as the web counterpart alongside each mobile ticket.
+ID
+Title
+Description
+Owner
+Est.
+Pri.
+WEB-1
+Next.js project setup & shared design tokens
+Bootstrap Next.js app, Tailwind config matching the design system, shared API client package with mobile
+FE
+2
+P0
+WEB-2
+Web auth flow with httpOnly cookie refresh
+Sign up/login/reset screens; secure cookie-based refresh token flow + CSRF protection (distinct from mobile's token storage)
+Both
+2
+P0
+WEB-3
+Responsive shell (sidebar / topbar / mobile bottom nav)
+Layout shell that switches between desktop sidebar and mobile-web bottom tabs at the 768px breakpoint
+FE
+1.5
+P0
+WEB-4
+Web chat client
+Socket.IO browser client wired to the same chat events/backend as mobile
+FE
+1.5
+P0
+WEB-5
+Web checkout (Stripe.js/Elements)
+Web equivalent of PAY-2 using Stripe Elements instead of the mobile Payment Sheet
+FE
+1.5
+P0
+WEB-6
+Public marketing home page
+SSR landing page replacing the current static site — hero, how-it-works, testimonials, CTAs into sign-up/app
+FE
+1.5
+P0
+WEB-7
+Public service catalogue & blog (SSR/SEO)
+Server-rendered, search-indexable versions of the service list and blog list/detail pages
+FE
+1.5
+P1
+WEB-8
+SEO fundamentals
+Meta tags, sitemap.xml, robots.txt, structured data for public pages
+FE
+1
+P1
+WEB-9
+Cross-browser & responsive QA pass
+Verify Chrome/Safari/Firefox + mobile-web breakpoints across the core flows before launch
+Both
+1
+P0
+Summary
+Total scope: 9 epics covering authentication, expert vetting, the request/matching engine, real-time chat, payments, reviews/notifications/blog, the Admin console, security/platform foundations, and the web app platform. P0 tickets represent the minimum required to launch a working two-sided marketplace on both mobile and web (student request → expert match → chat → payment → review); P1/P2 tickets can follow in the weeks after initial launch.
+Suggested sequencing for a 2-person team: Epic 1 (Auth) → Epic 2 (Expert onboarding) → Epic 3 (Requests & Matching) → Epic 4 (Chat) in parallel with Epic 8 security foundations → Epic 5 (Payments) → Epic 7 (Admin) → Epic 6 (Reviews/Notifications/Blog polish), with Epic 9 (Web platform) started as soon as WEB-1/WEB-2/WEB-3 can run in parallel with the mobile build of Epics 1–3, since both platforms hit the same backend.
+A pragmatic MVP sequencing option for a 2-person team is to ship mobile first end-to-end, then port the same screens to web using the shared API client/validation package (Epic 9) — this avoids building every screen twice in parallel and lets the web app benefit from UX decisions already validated on mobile.
+Admin console tickets (Epic 7) can be built incrementally alongside other epics since each admin screen unlocks the workflow behind a P0 ticket elsewhere (e.g. ADM-1 verification queue is required before EXP-5 approve/reject can be tested end-to-end).

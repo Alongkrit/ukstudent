@@ -1,0 +1,177 @@
+
+UK STUDENT SUPPORT
+Product Requirements Document
+UK Student Support — mobile app & web app connecting UK university students with academic experts
+Version 1.1  |  August 2026  |  Status: Draft, derived from marketing/brand content analysis  |  Covers: iOS, Android and Web
+Team size: 2 (Backend/Full-stack + Frontend/Mobile)
+
+0. About This Document
+The source material provided was the marketing/landing-page copy for “UK Student Support” (hero messaging, service list, how-it-works steps, testimonials, blog teasers and footer navigation) rather than a formal PRD. This document reverse-engineers a full product requirements specification from that content: every feature, user type and flow below was inferred from claims and structure present in the marketing copy (e.g. the three-step “Share Requirements → Get Connected → Learn with Confidence” flow, the six named services, the chat preview, and the trust signals). Sections marked “Assumption” introduce reasonable product detail not explicitly stated in the source and should be validated with the founder(s) before build.
+1. Executive Summary
+UK Student Support is a mobile app and web app that connect UK university students with vetted academic experts for on-demand, personalised academic guidance. Students describe an academic need (assignment, homework, dissertation, exam prep, essay, programming, referencing), are matched with a subject-appropriate expert, and receive support through the platform — positioned explicitly as guidance and confidence-building rather than having work completed for them. The product is available both as a native iOS/Android app and as a responsive website, giving students a way in whether they're on a phone between lectures or at a laptop in the library.
+The product's core value proposition, taken directly from the source copy, is speed and accessibility: “Connect with an expert in minutes,” support that “works around your schedule,” and guidance “based on UK academic standards.”
+2. Problem Statement & Opportunity
+2.1 Problem
+University students juggle assignments, coursework, exams and deadlines alongside lectures and part-time work, and don't always have timely access to help when they get stuck (evidenced by the source's framing: “managing assignments, coursework, exams, and deadlines isn't always easy”).
+Traditional academic support (university tutors, supervisors, office hours) is scheduled and slow; students need help “after lectures or late in the evening” — outside standard support hours.
+Students don't always know if their work meets UK-specific academic expectations (referencing styles, assessment criteria, academic writing conventions).
+2.2 Opportunity
+An on-demand, mobile-first marketplace that matches students to qualified experts by subject, available any time, addresses the timing and accessibility gap.
+Positioning around UK academic standards and recognised referencing styles (Harvard, APA, OSCOLA — named in the source blog teasers) differentiates from generic global tutoring apps.
+3. Target Users & Personas
+3.1 Primary Persona — The Student
+Attribute
+Detail
+Who
+UK university students, any year of study (source testimonials cite First-Year, Second-Year and Final-Year students)
+Needs
+Fast, understandable help with assignments, coursework, exams, dissertations, essays, referencing and programming
+Behaviours
+Uses a mobile app, needs support outside normal hours, values clear step-by-step explanation over just “getting the answer”
+Evidence from source
+Testimonials from Aisha (Manchester), Tom (Leeds), Priya (Nottingham) covering assignment help, coursework questions and dissertation support
+3.2 Secondary Persona — The Academic Expert
+Attribute
+Detail
+Who
+Qualified UK academic experts across subjects, referred to in the source as “experienced subject experts” and “Qualified UK Academic Experts”
+Needs
+A way to offer paid academic guidance flexibly, matched to their subject expertise and available time
+Evidence from source
+“We'll match you with an experienced academic expert who understands your subject and your level of study”
+3.3 Tertiary Persona — Platform Admin/Operator (Assumption)
+Not described in the source copy, but required by the product: an internal team role responsible for vetting experts, moderating content, and managing platform operations. Included here as a necessary inferred persona.
+4. Goals & Success Metrics
+4.1 Product Goals
+Let a student describe an academic need and reach a qualified expert “in minutes” (explicit source claim to design toward).
+Support the full breadth of services named in the source: Assignment Help, Homework Support, Dissertation Guidance, Coursework Assistance, Exam Preparation, Essay Writing, Programming Help, Referencing Support, and Proofreading & Editing.
+Maintain trust and quality signals equivalent to those advertised: a 4.9/5 average rating, qualified/verified experts, and a track record (source cites “10,000+ Students Successfully Supported”).
+Provide supplementary self-serve value through a study-tips blog (source: Essay Writing, Study Skills, Referencing categories).
+4.2 Success Metrics (Assumption — not stated in source, proposed for launch)
+Metric
+Target (initial)
+Why it matters
+Median time from request submitted to expert matched
+< 10 minutes
+Directly validates the “in minutes” promise
+Request completion rate
+> 85%
+Requests that reach a resolved/completed state vs. cancelled
+Average student rating
+≥ 4.7 / 5
+Maintain the quality bar implied by the advertised 4.9/5
+Expert application approval rate
+Tracked, no fixed target
+Signals vetting is neither too loose nor too restrictive
+Monthly active students
+Tracked post-launch
+Core growth indicator
+Repeat request rate (30-day)
+> 30%
+Indicates trust and habitual use
+5. Scope
+5.1 In Scope (MVP)
+Two platforms with full functional parity: a native mobile app (iOS + Android) and a responsive web app, both talking to the same backend.
+Student registration, login and profile.
+Browsing/selecting a service category and submitting a request with subject, description, deadline and file attachments.
+Expert matching and in-app chat between student and matched expert, including file sharing.
+Expert application, document verification, availability and profile management.
+Payment for services and expert payout.
+Post-session rating and review.
+Study-tips blog (read-only for students; managed by Admin).
+Admin console for expert verification, user/request oversight, moderation, and blog content management.
+5.2 Out of Scope (MVP)
+Live video or voice calling (source describes chat-based interaction only — “Upload your assignment brief, and we'll help you understand the requirements step by step” via messaging).
+Automated AI tutoring or AI-generated answers — the product is positioned around human experts.
+International expansion beyond the UK; multi-currency support.
+Group sessions or classroom features.
+6. Functional Requirements
+Each feature area below is traced to specific content in the source marketing copy, then expanded into concrete product requirements.
+6.1 Service Discovery
+Source basis: the “Academic Support Available” strip and “What We Can Help You With” section list Assignment Support, Homework Assistance, Dissertation Guidance, Exam Preparation, Proofreading & Editing, and Programming Support, each with an “Open in App” call-to-action, plus a broader “Explore Every Service” / “View All Services” link implying more services exist beyond the six featured.
+The app must present a service catalogue (grid or list) with icon, name and short description per service.
+A “View All Services” entry point must exist beyond the featured six, implying the catalogue is admin-manageable and extensible, not hardcoded.
+Each service tile deep-links directly into the request-creation flow pre-filled with that service (“Open in App” behaviour).
+6.2 Request Submission (“Share Your Requirements”)
+Source basis: How It Works step 1 — “Open the UK Student Support app, choose your subject, upload your assignment details, deadline, and any supporting documents.”
+Student selects a subject/service.
+Student enters assignment details (title/description) and a deadline.
+Student uploads one or more supporting documents (source chat preview shows a student saying “I'll send everything now 📎”, confirming attachment support is core, not optional).
+6.3 Expert Matching (“Get Connected”)
+Source basis: How It Works step 2 — “We'll match you with an experienced academic expert who understands your subject and your level of study.”
+Matching must account for both subject and “level of study” — implying student year/level (e.g. First-Year, Final-Year, Postgraduate) should be captured on the student profile and used as a matching input, not just subject.
+Matching should complete within minutes per the hero promise “Connect with an Expert in Minutes.”
+6.4 Guided Support via Chat (“Learn with Confidence”)
+Source basis: How It Works step 3 and the chat preview dialogue between “Student” and “Expert” roles shown on the landing page.
+Real-time messaging between student and matched expert, supporting text and file attachments, matching the chat UI implied by the landing page preview.
+The product's messaging must consistently frame outcomes as understanding and confidence (“Receive personalised guidance, improve your understanding, and complete your work with confidence”) — this is a content/positioning requirement, not just a UI one, and should inform expert guidelines and in-app copy (see Section 6.9).
+6.5 Flexible Scheduling
+Source basis: “Support That Works Around Your Schedule — Need help after lectures or late in the evening? Our app allows you to connect with academic experts at times that fit your routine.”
+Expert availability must not be limited to standard business hours; the matching system needs to surface experts who are online/available at evening and late-night times.
+Assumption: an explicit expert availability/online toggle is required (not detailed in source, but necessary to deliver this promise).
+6.6 Trust, Ratings & Track Record
+Source basis: “⭐ 4.9/5 Average Student Rating,” “🎓 Qualified UK Academic Experts,” “👨‍🎓 10,000+ Students Successfully Supported,” and three named, attributed testimonials.
+Post-session star rating and optional written review, aggregated into a platform-wide and per-expert average rating.
+Expert qualification/verification must be a genuine gate (not just marketing copy) — see Section 6.8.
+Testimonials/reviews should be collectable in a form the marketing team can showcase (name, year of study, university, quote) — implies a lightweight consent flow to feature a student's review publicly.
+6.7 UK Academic Standards Positioning
+Source basis: “Guidance Based on UK Academic Standards — Our experts understand the expectations of UK universities, including academic writing, assessment criteria, and recognised referencing styles,” plus the blog article “A Simple Guide to Harvard, APA & OSCOLA Referencing.”
+Expert profiles/vetting should capture familiarity with UK referencing styles (Harvard, APA, OSCOLA) and UK assessment conventions as part of qualification review.
+Blog content should include reference/study-skills material reinforcing this positioning (see 6.10).
+6.8 Expert Application & Verification
+Source basis: repeated claims of “Qualified UK Academic Experts” and “experienced subject experts” imply a vetting process, even though the source (student-facing marketing copy) does not describe the expert side of the product.
+Experts apply with subject expertise, qualifications and identity documents.
+An admin review/approval step must exist before an expert can accept requests, to make the “qualified” and “verified” claims true rather than aspirational.
+6.9 Academic Integrity Positioning (Assumption, risk-driven)
+The source copy is careful to frame outcomes as understanding, confidence and skill-building (“We believe learning is about understanding, not memorising”) rather than producing submittable work. This is a deliberate positioning choice the product must operationalise, not just state:
+In-app guidance, expert conduct guidelines, and Terms of Service should reinforce that experts provide explanation and feedback rather than completing assessed work on a student's behalf.
+See the companion Security & Access Document for the moderation/reporting mechanism that enforces this in practice.
+6.10 Blog / Study Resources
+Source basis: “FROM OUR BLOG” section listing three articles — “Writing a High-Quality University Essay: Where to Start” (Essay Writing, 6 min read), “Smarter Ways to Manage Coursework and Deadlines” (Study Skills, 5 min read), and “A Simple Guide to Harvard, APA & OSCOLA Referencing” (Referencing, 4 min read).
+Blog content is categorised (at minimum: Essay Writing, Study Skills, Referencing) with a displayed read-time estimate.
+Blog is publicly browsable and does not require login, consistent with its role as top-of-funnel content on the marketing site.
+6.11 Contact & Support
+Source basis: footer “CONTACT US — hello@ukstudentsupport.co.uk” and navigation items Home, About Us, Services, Blog, Contact Us.
+An in-app help/contact path must exist in addition to the public email contact shown on the marketing site.
+7. Key User Flows
+7.1 Student: Request → Match → Resolution
+Student opens the app and selects a service (e.g. Dissertation Guidance).
+Student fills in subject, description, deadline and attaches supporting documents.
+Student submits the request and sees a “finding your expert” status.
+Backend matches the request to an available, qualified expert within minutes.
+Student is notified of the match and a chat opens with the expert.
+Student and expert exchange messages/files until the student's need is addressed.
+Student marks the request as complete, pays (if not pre-paid), and rates the experience.
+7.2 Expert: Application → Active Support
+Prospective expert applies with subject areas, qualifications and identity/qualification documents.
+Admin reviews and approves (or rejects with reason) the application.
+Approved expert sets availability and begins receiving matched requests.
+Expert accepts a request, supports the student via chat, and marks their side complete.
+Expert receives payout for completed, paid requests.
+8. Non-Functional Requirements
+Category
+Requirement
+Performance
+Matching should resolve within minutes under normal load; chat messages should deliver in near real-time
+Availability
+Support must be accessible outside standard business hours, including evenings, per the “works around your schedule” promise
+Data protection
+UK GDPR compliance for student and expert personal data, and for uploaded academic documents
+Trust & safety
+Expert identity/qualification verification prior to activation; reporting mechanism for inappropriate conduct
+Platform
+Available on iOS + Android (native mobile app) and as a responsive web app in the browser — the product is not mobile-only; the existing marketing site's “Get the App” CTAs sit alongside a full web product experience, not just an app-download page
+Localisation
+UK English, GBP currency, UK referencing/academic-standards framing throughout
+9. Assumptions & Open Questions
+The following were not specified in the source marketing content and should be confirmed with stakeholders before finalising scope:
+Pricing model: the source contains no pricing information — per-request pricing, subscription, or credit-based model needs to be decided.
+Whether the “View All Services” catalogue extends beyond the six featured services, and if so, the full list.
+Whether experts are platform employees, contractors, or independent freelancers (affects payment/payout and legal structure).
+Confirmed: the product spans mobile app and web app, so the source's public marketing pages (Home, Services, Blog) should evolve into real, functional web pages rather than a static site that only drives app downloads — see Section 8 Platform requirement and the companion Frontend Specification Document, Section 4.3, for the web screen inventory.
+Specific SLA for matching time (“in minutes” is a marketing claim, not a defined target) — proposed in Section 4.2, pending confirmation.
+10. Related Documents
+Technical Architecture Document — system design and technology stack
+Security & Access Document — authentication, authorisation, data protection and academic-integrity controls
+Frontend Specification Document — screens, navigation and design system
+Feature Ticket List — epics and build-ready tickets derived from this PRD
