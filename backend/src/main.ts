@@ -41,7 +41,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const port = config.get<number>('PORT', 3001);
+  const port = Number(config.get<string>('PORT')) || 3001;
   await app.listen(port);
   // eslint-disable-next-line no-console
   console.log(`🚀 Scholza API running on http://localhost:${port}/${apiPrefix}`);
