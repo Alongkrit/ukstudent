@@ -7,10 +7,15 @@ import { Sidebar } from './components/Sidebar';
 import { BottomNav } from './components/BottomNav';
 import { Footer } from './components/Footer';
 
-export const metadata: Metadata = {
-  title: 'Scholza — Connect with Academic Experts in Minutes',
-  description: 'On-demand personalised academic guidance for university students worldwide across assignments, dissertations, exam prep, proofreading, and programming.',
-};
+   export const metadata: Metadata = {
+     title: 'Scholza — Connect with Academic Experts in Minutes',
+     description: 'On-demand personalised academic guidance for university students worldwide across assignments, dissertations, exam prep, proofreading, and programming.',
+     manifest: '/manifest.json',
+   };
+
+   export const viewport = {
+     themeColor: '#1F3864',
+   };
 
 export default function RootLayout({
   children,
