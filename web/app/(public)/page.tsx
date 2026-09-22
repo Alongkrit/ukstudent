@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   GraduationCap,
@@ -26,6 +26,16 @@ import {
 
 export default function HomePage() {
   const [selectedSubject, setSelectedSubject] = useState('Assignment Help');
+
+  const [isInstalledApp, setIsInstalledApp] = useState(false);
+
+  useEffect(() => {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true ||
+      document.referrer.startsWith('android-app://');
+    setIsInstalledApp(isStandalone);
+  }, []);
 
   const services = [
     {
@@ -167,6 +177,22 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
+
+          {/* Android Download */}
+          {!isInstalledApp && (
+            <div className="pt-2">
+              <a
+                href="/downloads/scholza.apk"
+                download
+                className="inline-flex items-center gap-2 text-xs font-bold text-white bg-white/15 hover:bg-white/25 px-4 py-2.5 rounded-xl border border-white/20 transition-all"
+              >
+                📱 Download for Android
+              </a>
+              <p className="mt-2 text-[11px] text-slate-300">
+                You may see an &quot;Unknown app&quot; warning — this is normal for apps outside the Play Store. Tap Install anyway to continue.
+              </p>
+            </div>
+          )}
 
           {/* SLA stats */}
           <div className="pt-4 grid grid-cols-3 gap-4 border-t border-white/15 text-xs text-slate-300">

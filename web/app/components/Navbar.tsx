@@ -14,6 +14,8 @@ import {
   ToggleLeft,
   ToggleRight,
   Shield,
+  Facebook,
+  Instagram,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -28,9 +30,11 @@ export const Navbar: React.FC = () => {
           
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-navy to-primary-blue flex items-center justify-center text-white shadow-md shadow-primary-navy/20 group-hover:scale-105 transition-transform">
-              <GraduationCap className="w-6 h-6 text-accent-gold" />
-            </div>
+            <img
+              src="/logo-green.jpg"
+              alt="Scholza logo"
+              className="w-10 h-10 rounded-xl object-contain group-hover:scale-105 transition-transform"
+            />
             <div className="flex flex-col">
               <span className="font-extrabold text-lg text-primary-navy leading-none tracking-tight">
                 SCHOL<span className="text-accent-gold">ZA</span>
@@ -307,6 +311,28 @@ export const Navbar: React.FC = () => {
                 Login
               </Link>
             )}
+          </div>
+
+          <div className="pt-2 border-t border-slate-200 flex items-center justify-center gap-4 text-xs text-slate-500">
+            <span>Follow us:</span>
+            <a
+              href="https://www.facebook.com/share/1Dgr2oGQSi/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-600 hover:text-primary-navy font-semibold flex items-center gap-1 transition-colors"
+            >
+              <Facebook className="w-3.5 h-3.5 text-primary-navy" />
+              <span>Facebook</span>
+            </a>
+            <a
+              href="https://www.instagram.com/scholza_2026?stkn=YmhmZjA5ZHAxZ2c4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-600 hover:text-primary-navy font-semibold flex items-center gap-1 transition-colors"
+            >
+              <Instagram className="w-3.5 h-3.5 text-primary-navy" />
+              <span>Instagram</span>
+            </a>
           </div>
         </div>
       )}

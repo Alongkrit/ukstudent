@@ -36,7 +36,7 @@ export default function PrivacyPage() {
         <section className="space-y-2">
           <h2 className="text-sm font-bold text-slate-900">3. Data Retention & Your Rights</h2>
           <p>
-            Under GDPR and global privacy laws, you have the right to request access to your personal data, request data correction, or request account deletion. You can exercise these rights by contacting <code>help@scholza.com</code>.
+            Under GDPR and global privacy laws, you have the right to request access to your personal data, request data correction, or request account deletion. You can exercise these rights by contacting <code>scholzacoin@gmail.com</code>.
           </p>
         </section>
 
