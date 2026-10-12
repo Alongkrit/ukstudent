@@ -17,6 +17,7 @@ import {
   Facebook,
   Instagram,
 } from 'lucide-react';
+import { WhatsAppIcon } from './WhatsAppIcon';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -187,6 +188,16 @@ export const Navbar: React.FC = () => {
 
           {/* Right Action / Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <a
+              href="https://wa.me/918078611491?text=Hello%20Scholza%2C%20I%20would%20like%20to%20inquire%20about%20academic%20support."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300/80 px-2.5 py-1.5 rounded-xl transition-all shadow-sm"
+              title="WhatsApp: +91 8078611491"
+            >
+              <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
+              <span className="hidden lg:inline">WhatsApp</span>
+            </a>
             {user ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center gap-1.5">
@@ -291,7 +302,16 @@ export const Navbar: React.FC = () => {
             </>
           )}
 
-          <div className="pt-2 border-t border-slate-200">
+          <div className="pt-2 border-t border-slate-200 space-y-2">
+            <a
+              href="https://wa.me/918078611491?text=Hello%20Scholza%2C%20I%20would%20like%20to%20inquire%20about%20academic%20support."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full text-center py-2 text-xs font-bold text-white bg-[#25D366] hover:bg-[#20ba5a] rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+            >
+              <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
+              <span>WhatsApp: +91 8078611491</span>
+            </a>
             {user ? (
               <button
                 onClick={() => {
@@ -315,6 +335,15 @@ export const Navbar: React.FC = () => {
 
           <div className="pt-2 border-t border-slate-200 flex items-center justify-center gap-4 text-xs text-slate-500">
             <span>Follow us:</span>
+            <a
+              href="https://wa.me/918078611491?text=Hello%20Scholza%2C%20I%20would%20like%20to%20inquire%20about%20academic%20support."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-600 hover:text-[#25D366] font-semibold flex items-center gap-1 transition-colors"
+            >
+              <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
+              <span>WhatsApp</span>
+            </a>
             <a
               href="https://www.facebook.com/share/1Dgr2oGQSi/"
               target="_blank"

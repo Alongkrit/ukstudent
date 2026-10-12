@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Zap,
 } from 'lucide-react';
+import { WhatsAppIcon } from '../components/WhatsAppIcon';
 
 export default function HomePage() {
   const [selectedSubject, setSelectedSubject] = useState('Assignment Help');
@@ -402,13 +403,22 @@ export default function HomePage() {
           <p className="text-xs sm:text-sm text-slate-200">
             Submit your assignment query in under 2 minutes and connect with an expert available right now.
           </p>
-          <div className="pt-2 flex justify-center gap-3">
+          <div className="pt-2 flex flex-col sm:flex-row justify-center items-center gap-3">
             <Link
               href="/requests/new"
-              className="px-6 py-3.5 rounded-xl bg-accent-gold text-slate-900 font-bold text-xs shadow-xl hover:scale-105 transition-transform"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-accent-gold text-slate-900 font-bold text-xs shadow-xl hover:scale-105 transition-transform text-center"
             >
               Start My Request
             </Link>
+            <a
+              href="https://wa.me/918078611491?text=Hello%20Scholza%2C%20I%20would%20like%20to%20inquire%20about%20academic%20support."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs shadow-xl hover:scale-105 transition-transform flex items-center justify-center gap-2"
+            >
+              <WhatsAppIcon className="w-4 h-4 text-white" />
+              <span>Chat on WhatsApp (+91 8078611491)</span>
+            </a>
           </div>
         </div>
       </section>

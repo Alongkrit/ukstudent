@@ -21,6 +21,7 @@ import {
   ToggleRight,
   ShieldAlert,
 } from 'lucide-react';
+import { WhatsAppIcon } from './WhatsAppIcon';
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
@@ -276,6 +277,30 @@ export const Sidebar: React.FC = () => {
           </Link>
         </div>
       )}
+
+      {/* WhatsApp Quick Help Card */}
+      <div className="mt-auto pt-4 border-t border-slate-200/80">
+        <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-sm">
+              <WhatsAppIcon className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-800 leading-tight">Need Quick Help?</p>
+              <p className="text-[10px] text-slate-500 font-semibold">+91 8078611491</p>
+            </div>
+          </div>
+          <a
+            href="https://wa.me/918078611491?text=Hello%20Scholza%2C%20I%20need%20quick%20assistance."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 bg-[#25D366] hover:bg-[#20ba5a] text-white text-[11px] font-bold rounded-lg shadow-sm transition-all"
+          >
+            <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
+            <span>Chat on WhatsApp</span>
+          </a>
+        </div>
+      </div>
     </aside>
   );
 };

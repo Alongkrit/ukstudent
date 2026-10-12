@@ -6,6 +6,7 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { BottomNav } from './components/BottomNav';
 import { Footer } from './components/Footer';
+import { WhatsAppButton } from './components/WhatsAppButton';
 
    export const metadata: Metadata = {
      title: 'Scholza — Connect with Academic Experts in Minutes',
@@ -39,6 +40,7 @@ export default function RootLayout({
             </main>
           </div>
           <BottomNav />
+          <WhatsAppButton />
           <Footer />
         </AuthProvider>
       </body>

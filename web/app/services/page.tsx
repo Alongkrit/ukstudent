@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Sparkles,
 } from 'lucide-react';
+import { WhatsAppIcon } from '../components/WhatsAppIcon';
 
 export default function ServicesPage() {
   const [search, setSearch] = useState('');
@@ -168,6 +169,30 @@ export default function ServicesPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* WhatsApp Help Banner */}
+      <div className="bg-emerald-50 border border-emerald-200/80 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-md">
+            <WhatsAppIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Need Custom Academic Guidance?</h3>
+            <p className="text-xs text-slate-600 mt-0.5">
+              Have unique requirements or tight deadlines? Chat directly with an advisor on WhatsApp: <strong>+91 8078611491</strong>
+            </p>
+          </div>
+        </div>
+        <a
+          href="https://wa.me/918078611491?text=Hello%20Scholza%2C%20I%20have%20a%20question%20about%20your%20academic%20services."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="whitespace-nowrap px-5 py-3 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold shadow-md hover:scale-105 transition-all flex items-center gap-2"
+        >
+          <WhatsAppIcon className="w-4 h-4 text-white" />
+          <span>Chat on WhatsApp</span>
+        </a>
       </div>
 
     </div>

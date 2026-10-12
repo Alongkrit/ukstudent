@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { GraduationCap, ShieldCheck, Mail, Lock, Facebook, Instagram } from 'lucide-react';
+import { WhatsAppIcon } from './WhatsAppIcon';
 
 export const Footer: React.FC = () => {
   return (
@@ -32,6 +33,16 @@ export const Footer: React.FC = () => {
                 Follow Scholza
               </span>
               <div className="flex items-center gap-2.5">
+                <a
+                  href="https://wa.me/918078611491?text=Hello%20Scholza%2C%20I%20would%20like%20to%20inquire%20about%20academic%20support."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp"
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-[#25D366]/20 hover:text-[#25D366] border border-white/15 flex items-center justify-center text-slate-300 transition-all hover:scale-105"
+                  title="Chat on WhatsApp (+91 8078611491)"
+                >
+                  <WhatsAppIcon className="w-4 h-4" />
+                </a>
                 <a
                   href="https://www.facebook.com/share/1Dgr2oGQSi/"
                   target="_blank"
@@ -84,12 +95,23 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Col 4: Contact & Support */}
+            {/* Col 4: Contact & Support */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">
               Contact & Support
             </h4>
             <div className="space-y-2 text-xs text-slate-400">
+              <p className="flex items-center gap-2">
+                <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
+                <a
+                  href="https://wa.me/918078611491?text=Hello%20Scholza%2C%20I%20would%20like%20to%20inquire%20about%20academic%20support."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  +91 8078611491 (WhatsApp)
+                </a>
+              </p>
               <p className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-accent-gold" />
                 <a href="mailto:scholzacoin@gmail.com" className="hover:text-white transition-colors">
@@ -110,6 +132,15 @@ export const Footer: React.FC = () => {
                   Social Channels
                 </span>
                 <div className="flex flex-col space-y-2 text-xs">
+                  <a
+                    href="https://wa.me/918078611491?text=Hello%20Scholza%2C%20I%20would%20like%20to%20inquire%20about%20academic%20support."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-slate-300 hover:text-[#25D366] transition-colors"
+                  >
+                    <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
+                    <span>WhatsApp (+91 8078611491)</span>
+                  </a>
                   <a
                     href="https://www.facebook.com/share/1Dgr2oGQSi/"
                     target="_blank"
@@ -138,6 +169,17 @@ export const Footer: React.FC = () => {
         <div className="pt-8 border-t border-slate-700/60 flex flex-col md:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© {new Date().getFullYear()} Scholza. All rights reserved.</p>
           <div className="flex items-center gap-4">
+            <a
+              href="https://wa.me/918078611491?text=Hello%20Scholza%2C%20I%20would%20like%20to%20inquire%20about%20academic%20support."
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp"
+              className="text-slate-400 hover:text-[#25D366] transition-colors flex items-center gap-1.5"
+            >
+              <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
+              <span className="hidden sm:inline">WhatsApp</span>
+            </a>
+            <span className="text-slate-600">•</span>
             <a
               href="https://www.facebook.com/share/1Dgr2oGQSi/"
               target="_blank"
